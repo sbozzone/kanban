@@ -1,61 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kanban</title>
-<meta name="description" content="A simple personal kanban board that works offline.">
-<meta name="theme-color" content="#1b1d21">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="stylesheet" href="styles.css">
-</head>
-<body>
-<header class="topbar">
-  <h1>Kanban</h1>
-  <div class="topbar-actions">
-    <button id="add-card-btn" class="btn btn-primary" type="button">+ New card</button>
-    <details class="menu">
-      <summary class="btn" aria-label="More actions">•••</summary>
-      <div class="menu-panel">
-        <button id="export-btn" class="menu-item" type="button">Export backup (.json)</button>
-        <button id="import-btn" class="menu-item" type="button">Import backup…</button>
-        <button id="archive-btn" class="menu-item" type="button">Clear the Done column</button>
-        <input id="import-file" type="file" accept="application/json,.json" hidden>
-      </div>
-    </details>
-  </div>
-</header>
-
-<main id="board" class="board" aria-label="Kanban board"></main>
-
-<dialog id="card-dialog" class="dialog">
-  <form method="dialog" id="card-form">
-    <h2 id="dialog-title">New card</h2>
-    <label class="field">
-      <span>Title</span>
-      <input id="card-title" name="title" type="text" required maxlength="200" autocomplete="off">
-    </label>
-    <label class="field">
-      <span>Notes <em>(optional)</em></span>
-      <textarea id="card-note" name="note" rows="4" maxlength="2000"></textarea>
-    </label>
-    <label class="field">
-      <span>Column</span>
-      <select id="card-column" name="column"></select>
-    </label>
-    <div class="dialog-actions">
-      <button id="delete-card-btn" class="btn btn-danger" type="button">Delete</button>
-      <span class="spacer"></span>
-      <button class="btn" type="button" data-close>Cancel</button>
-      <button class="btn btn-primary" type="submit">Save</button>
-    </div>
-  </form>
-</dialog>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-<script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6f2e9" />
+    <title>Cairn</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

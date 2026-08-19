@@ -43,7 +43,7 @@ export function CardDialog({ card, defaultStatus, onSave, onDelete, onClose }: P
         onMouseDown={(event) => event.stopPropagation()}
       >
         <form onSubmit={submit}>
-          <h2 className="panel-title">{card ? 'Edit card' : 'New card'}</h2>
+          <h2 className="dialog-title">{card ? 'Edit card' : 'New card'}</h2>
 
           <label className="field">
             <span>Title</span>

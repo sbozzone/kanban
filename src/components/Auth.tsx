@@ -29,7 +29,8 @@ export function Auth() {
   return (
     <div className="centered">
       <div className="panel">
-        <h1 className="panel-title">Kanban</h1>
+        <h1 className="panel-title">Cairn</h1>
+        <p className="tagline">To do &middot; In progress &middot; Done</p>
         {sent ? (
           <>
             <p className="muted">

@@ -1,31 +1,24 @@
+/*
+ * A warm, paper-like light theme: cream page, soft stone columns, near-white
+ * cards, deep navy ink. Each column carries one muted accent.
+ */
 :root {
-  --bg: #f5f6f8;
-  --surface: #ffffff;
-  --surface-2: #eceef2;
-  --text: #16181d;
-  --muted: #666c78;
-  --line: #dcdfe6;
-  --accent: #3b62d9;
-  --accent-text: #ffffff;
-  --danger: #c0392b;
-  --shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 4px 12px rgba(16, 18, 24, 0.06);
-  --radius: 10px;
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #16181d;
-    --surface: #1e2128;
-    --surface-2: #262a33;
-    --text: #e8eaee;
-    --muted: #9aa2b1;
-    --line: #333844;
-    --accent: #5b83ff;
-    --accent-text: #0f1116;
-    --danger: #e06a5c;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
-  }
+  --bg: #f6f2e9;
+  --surface: #ebe7dc;
+  --card: #fbf9f4;
+  --text: #15293d;
+  --muted: #6c7b8c;
+  --line: #ded8ca;
+  --line-soft: #e6e1d5;
+  --accent: #1e3a57;
+  --accent-text: #fbf9f4;
+  --danger: #a8452f;
+  --shadow: 0 1px 2px rgba(30, 35, 45, 0.05), 0 6px 16px rgba(30, 35, 45, 0.05);
+  --shadow-lift: 0 2px 4px rgba(30, 35, 45, 0.07), 0 12px 28px rgba(30, 35, 45, 0.09);
+  --radius: 12px;
+  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  /* The design is deliberately light, so it does not follow the system theme. */
+  color-scheme: light;
 }
 
 * {
@@ -36,7 +29,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -53,19 +46,22 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  padding-top: max(12px, env(safe-area-inset-top));
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  padding: 14px 20px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  background: var(--bg);
+  border-bottom: 1px solid var(--line-soft);
   position: sticky;
   top: 0;
   z-index: 5;
 }
 
-.topbar h1 {
+.wordmark {
   margin: 0;
-  font-size: 18px;
-  font-weight: 650;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
 }
 
 .topbar-actions {
@@ -78,13 +74,14 @@ body {
 
 .btn {
   font: inherit;
-  padding: 8px 14px;
+  padding: 8px 15px;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: var(--surface-2);
+  background: var(--card);
   color: var(--text);
   cursor: pointer;
   min-height: 40px;
+  transition: border-color 120ms ease, background 120ms ease;
 }
 
 .btn:hover:not(:disabled) {
@@ -92,7 +89,7 @@ body {
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: default;
 }
 
@@ -100,32 +97,48 @@ body {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-text);
-  font-weight: 600;
+  font-weight: 550;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #16293d;
+  border-color: #16293d;
 }
 
 .btn-danger {
   color: var(--danger);
+  border-color: transparent;
+  background: none;
 }
 
 .btn-block {
   width: 100%;
 }
 
+/* Quiet chevrons: present for touch, but not competing with the card's text. */
 .icon-btn {
   font: inherit;
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 6px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--text);
+  border: 0;
+  background: none;
+  color: var(--muted);
+  opacity: 0.55;
   cursor: pointer;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+  opacity: 1;
+  color: var(--text);
+  background: var(--surface);
 }
 
 .icon-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.16;
   cursor: default;
 }
 
@@ -134,9 +147,9 @@ body {
 .board {
   flex: 1;
   display: flex;
-  gap: 12px;
-  padding: 12px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  gap: 16px;
+  padding: 18px 20px;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   align-items: stretch;
@@ -146,9 +159,8 @@ body {
   flex: 0 0 86%;
   scroll-snap-align: center;
   background: var(--surface);
-  border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
 }
@@ -166,23 +178,45 @@ body {
 }
 
 .column-over {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  background: #e5e0d2;
+}
+
+/* One muted accent per column, echoed in the dot and the rule beneath it. */
+.column-todo {
+  --dot: #c8871b;
+}
+
+.column-doing {
+  --dot: #5b7290;
+}
+
+.column-done {
+  --dot: #6e8a6a;
 }
 
 .column-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 9px;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--dot);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--dot);
+  flex: none;
 }
 
 .column-head h2 {
   margin: 0;
-  font-size: 13px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.09em;
   color: var(--muted);
 }
 
@@ -190,15 +224,12 @@ body {
   margin-left: auto;
   font-size: 12px;
   color: var(--muted);
-  background: var(--surface-2);
-  border-radius: 20px;
-  padding: 2px 8px;
 }
 
 .column-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   /* Fills the column so an empty area is still a comfortable drop target. */
   flex: 1;
   min-height: 56px;
@@ -210,15 +241,20 @@ body {
   display: flex;
   align-items: stretch;
   gap: 6px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  background: var(--card);
+  border-radius: 10px;
   box-shadow: var(--shadow);
   cursor: grab;
+  transition: box-shadow 130ms ease, transform 130ms ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lift);
 }
 
 .card-dragging {
-  opacity: 0.4;
+  opacity: 0.45;
+  box-shadow: none;
 }
 
 .card-body {
@@ -226,8 +262,8 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
+  gap: 5px;
+  padding: 13px 14px;
   font: inherit;
   text-align: left;
   background: none;
@@ -255,14 +291,15 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 8px 8px 0;
+  gap: 2px;
+  padding: 8px 7px 8px 0;
 }
 
 .empty {
   color: var(--muted);
   font-size: 13px;
-  margin: 4px 0;
+  margin: 2px 0;
+  opacity: 0.75;
 }
 
 /* --- panels, dialog, forms --- */
@@ -277,28 +314,47 @@ body {
 
 .centered-text {
   text-align: center;
-  padding: 40px 20px;
+  padding: 48px 20px;
+  color: var(--muted);
 }
 
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--card);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 22px;
+  padding: 26px;
   width: 100%;
   max-width: 420px;
 }
 
 .panel-title {
-  margin: 0 0 12px;
-  font-size: 20px;
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.tagline {
+  margin: 0 0 18px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dialog-title {
+  margin: 0 0 18px;
+  font-family: var(--serif);
+  font-size: 23px;
+  font-weight: 500;
 }
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 12, 16, 0.5);
+  background: rgba(21, 41, 61, 0.32);
   display: grid;
   place-items: center;
   padding: 16px;
@@ -317,9 +373,11 @@ body {
 
 .field > span {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .field input,
@@ -329,7 +387,7 @@ body {
   font: inherit;
   /* 16px keeps iOS Safari from zooming when a field takes focus. */
   font-size: 16px;
-  padding: 9px 11px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: var(--bg);
@@ -351,7 +409,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
 .spacer {
@@ -371,11 +429,11 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 12px 12px 0;
-  padding: 10px 12px;
+  margin: 14px 20px 0;
+  padding: 10px 13px;
   border-radius: 8px;
   border: 1px solid var(--danger);
-  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  background: #f6e7e2;
   font-size: 14px;
 }
 
@@ -384,7 +442,7 @@ body {
 }
 
 code {
-  background: var(--surface-2);
+  background: var(--surface);
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 13px;

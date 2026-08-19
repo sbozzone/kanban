@@ -1,6 +1,8 @@
-# Kanban
+# Cairn
 
 A personal kanban board that stays in sync between your phone and your computer.
+
+Named for the stacks of stones that mark a trail — one placed at a time.
 
 Three columns — **To do**, **In progress**, **Done**. Cards have a title and
 optional notes. Drag them between columns on a desktop, or use the `‹` `›`

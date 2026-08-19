@@ -43,7 +43,7 @@ export function Board({ session }: { session: Session }) {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>Kanban</h1>
+        <h1 className="wordmark">Cairn</h1>
         <div className="topbar-actions">
           <button
             className="btn btn-primary"
@@ -68,7 +68,7 @@ export function Board({ session }: { session: Session }) {
       )}
 
       {loading ? (
-        <p className="muted centered-text">Loading your board…</p>
+        <p className="muted centered-text">Gathering your board…</p>
       ) : (
         <main className="board">
           {COLUMNS.map((column, index) => (

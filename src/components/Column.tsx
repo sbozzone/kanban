@@ -62,13 +62,14 @@ export function Column({
 
   return (
     <section
-      className={`column${over ? ' column-over' : ''}`}
+      className={`column column-${status}${over ? ' column-over' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={() => setOver(false)}
       onDrop={handleDrop}
       aria-label={label}
     >
       <header className="column-head">
+        <span className="dot" aria-hidden="true" />
         <h2>{label}</h2>
         <span className="count">{cards.length}</span>
       </header>

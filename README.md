@@ -6,115 +6,127 @@ Named for the stacks of stones that mark a trail — one placed at a time.
 
 Three columns — **To do**, **In progress**, **Done**. Cards have a title and
 optional notes. Drag them between columns on a desktop, or use the `‹` `›`
-buttons, which work just as well on a touchscreen. A change on one device shows
-up on the other within a second, without a refresh.
+buttons, which work just as well on a touchscreen.
 
 ## How it works
 
 - **Vite + React + TypeScript**, built to static files.
-- **Supabase** is the whole backend: Postgres stores the cards, Auth handles
-  sign-in, Realtime pushes changes to the other device.
-- **Vercel** serves the static build.
+- **One serverless function** (`api/board.ts`) reads and writes the whole board
+  as a single JSON document.
+- **Upstash Redis** stores that document.
+- **Vercel** serves both halves.
 
-There is no server code to maintain. The browser talks to Supabase directly, and
-Postgres row level security is what keeps the data private — every policy checks
-`auth.uid() = user_id`, so a card is only ever readable by the account that made
-it.
+This is built for exactly one person. There are no accounts — a single
+passphrase unlocks the board, and your browser remembers it until you press
+**Lock**. That is the whole authorization model, which is why the passphrase
+should be long.
+
+### Why a passphrase and not accounts
+
+Accounts exist to tell users apart. With one user there is nobody to tell apart,
+only strangers to keep out, and a passphrase does that with no sign-up flow, no
+email round trip, and no per-row security rules.
+
+The tradeoff is real: anyone with the URL *and* the passphrase is in. There is
+no password reset, and no way to revoke one device without changing the
+passphrase everywhere.
+
+### Why the board is one document
+
+The whole board is small — a few hundred cards at most — so it is stored as one
+JSON blob rather than a row per card. That keeps the server to one file.
+
+To stop one device from overwriting the other, the document carries a revision
+number. Every write sends the revision it was based on, and the server rejects
+anything stale with `409` plus the newer board. The client then replays the same
+change onto that newer board and retries, so a late write merges instead of
+clobbering. Changes are modelled as pure functions for exactly this reason.
+
+### Keeping devices current
+
+There is no realtime push. The board reloads when a tab regains focus, which
+matches how one person actually works — you put the phone down, you open the
+laptop. Pick up a device and you are looking at current state.
 
 ## Setup
 
-You need a [Supabase](https://supabase.com) project and a
-[Vercel](https://vercel.com) account. Both are free at this size.
+You need a [Vercel](https://vercel.com) account. Everything here fits the free
+tier.
 
-### 1. Create the database
+### 1. Add Redis
 
-In your Supabase project, open **SQL Editor**, paste in the contents of
-[`supabase/schema.sql`](supabase/schema.sql), and run it. That creates the
-`cards` table, its indexes, the row level security policies, and the Realtime
-publication. The script is safe to run more than once.
+In your Vercel project, go to **Storage** and add **Upstash Redis** from the
+marketplace. Connecting it sets the URL and token environment variables for you.
 
-### 2. Turn on email sign-in
+### 2. Set a passphrase
 
-Under **Authentication → Sign In / Up → Email**, make sure email is enabled.
-Sign-in uses a magic link, so you never set a password.
+In **Settings → Environment Variables**, add:
 
-Under **Authentication → URL Configuration**, add your site URL and
-`http://localhost:5173` to the redirect allow list, so the link in the email
-knows where to send you back to.
+| Variable | Value |
+| --- | --- |
+| `BOARD_PASSPHRASE` | a long passphrase of your choosing |
 
-### 3. Run it locally
+**Do not give it a `VITE_` prefix.** That prefix is what tells Vite to inline a
+value into the browser bundle, where anyone could read it. Unprefixed variables
+stay on the server, which is the entire point.
 
-```bash
-npm install
-cp .env.example .env.local   # then fill in the two values
-npm run dev
-```
+### 3. Deploy
 
-Both values come from the Supabase dashboard, under **Project Settings → Data
-API**:
+Import the repository on Vercel. It detects Vite, builds the frontend, and
+deploys `api/board.ts` as a function automatically — no extra configuration.
 
-| Variable                  | Where to find it              |
-| ------------------------- | ----------------------------- |
-| `VITE_SUPABASE_URL`       | Project URL                   |
-| `VITE_SUPABASE_ANON_KEY`  | Project API key, `anon public` |
+### 4. Put it on your phone
 
-The anon key is designed to be public — it identifies the project, and the row
-level security policies are what actually protect the data. Don't use the
-`service_role` key here; it bypasses those policies.
-
-### 4. Deploy
-
-Import the repository on Vercel. It detects Vite on its own, so the only thing
-to configure is **Settings → Environment Variables** — add `VITE_SUPABASE_URL`
-and `VITE_SUPABASE_ANON_KEY` with the same values as above, then deploy.
-
-Afterwards, put the deployed URL back into Supabase's redirect allow list
-(step 2) so the sign-in email works in production.
-
-### 5. Put it on your phone
-
-Open the deployed URL in your phone's browser and use **Add to Home Screen**.
-Sign in with the same email address you used on your computer and the same board
-appears.
+Open the deployed URL, enter the passphrase, and use **Add to Home Screen**.
+Do the same on your computer. Both now read and write the same board.
 
 ## Working on it
 
 ```bash
-npm run dev        # local dev server
-npm run typecheck  # TypeScript, no emit
-npm run build      # typecheck, then production build
+npm install
+npm run typecheck   # both the app and the function
+npm run build       # typecheck, then production build
+```
+
+For the frontend alone, `npm run dev` is enough. It does **not** serve `api/`,
+so anything touching the board will fail with a JSON parse error — Vite returns
+`index.html` for the unmatched route. To run both together:
+
+```bash
+cp .env.example .env.local   # fill in the three values
+npx vercel dev
 ```
 
 Layout of the source:
 
 ```
+api/
+  board.ts             GET and PUT the board, passphrase-gated
 src/
-  App.tsx              session handling: sign-in screen or board
+  App.tsx              locked or unlocked
   components/
-    Auth.tsx           magic-link sign in
+    Passphrase.tsx     the unlock screen
     Board.tsx          columns, dialog state, drag state
     Column.tsx         one column, including where a drop lands
     CardItem.tsx       one card
     CardDialog.tsx     new/edit card form
-    Setup.tsx          shown when the build has no Supabase credentials
   lib/
-    supabase.ts        client
-    types.ts           Card, Status, the column list
-    useCards.ts        load, realtime, and all mutations
-supabase/schema.sql    tables, policies, realtime
+    api.ts             fetch wrapper, passphrase storage, typed errors
+    types.ts           Card, Board, Status, the column list
+    useBoard.ts        load, refresh on focus, and all mutations
 ```
 
 ### How ordering works
 
 Cards carry a floating point `position` rather than an integer index. Dropping a
-card between two others gives it the midpoint of their positions, so a move is a
-single row update and never has to renumber the column.
+card between two others gives it the midpoint of their positions, so a move
+never has to renumber the column.
 
 ## Known limitations
 
-- **No offline support.** The app needs a connection; it isn't a full offline
-  PWA with a service worker and a sync queue.
+- **No offline support.** The app needs a connection.
+- **No tests in the repo.** The handler and the browser flow were both exercised
+  during development, but nothing is wired up to run on its own.
 - **The columns are fixed.** To do / In progress / Done are defined in
-  `src/lib/types.ts` and in a `check` constraint in the schema. Changing them
-  means editing both.
-- **One board per account.** There's no notion of multiple boards or projects.
+  `src/lib/types.ts`.
+- **One board.** No notion of multiple boards or projects.

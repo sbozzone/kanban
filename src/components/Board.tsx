@@ -1,17 +1,13 @@
 import { useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
 import { Column } from './Column'
 import { CardDialog } from './CardDialog'
-import { cardsIn, useCards } from '../lib/useCards'
-import { supabase } from '../lib/supabase'
+import { cardsIn, useBoard } from '../lib/useBoard'
 import { COLUMNS, type Card, type CardDraft, type Status } from '../lib/types'
 
 type Editing = { card: Card | null } | null
 
-export function Board({ session }: { session: Session }) {
-  const { cards, loading, error, setError, create, edit, move, remove } = useCards(
-    session.user.id,
-  )
+export function Board({ onLock }: { onLock: () => void }) {
+  const { cards, loading, error, setError, create, edit, move, remove } = useBoard(onLock)
   const [editing, setEditing] = useState<Editing>(null)
   const [dragging, setDragging] = useState<Card | null>(null)
 
@@ -52,8 +48,8 @@ export function Board({ session }: { session: Session }) {
           >
             + New card
           </button>
-          <button className="btn" type="button" onClick={() => void supabase.auth.signOut()}>
-            Sign out
+          <button className="btn" type="button" onClick={onLock}>
+            Lock
           </button>
         </div>
       </header>

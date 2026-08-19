@@ -1,95 +1,116 @@
-import { useRef, useState, type DragEvent } from 'react'
-import { CardItem } from './CardItem'
-import type { Card, Status } from '../lib/types'
+import { TaskCard } from './TaskCard'
+import type { DropTarget } from '../lib/useDrag'
+import type { ColumnSpec, Task } from '../lib/types'
 
 interface Props {
-  status: Status
-  label: string
-  cards: Card[]
-  dragging: Card | null
-  canMoveLeft: boolean
-  canMoveRight: boolean
-  onOpen: (card: Card) => void
-  onMove: (card: Card, direction: -1 | 1) => void
-  onDrop: (status: Status, index: number) => void
-  onDragStart: (card: Card) => void
-  onDragEnd: () => void
-}
-
-/** Where in the list a drop at `clientY` should land, ignoring the card being moved. */
-function dropIndex(list: HTMLElement, clientY: number, draggingId: string): number {
-  const items = Array.from(list.querySelectorAll<HTMLElement>('[data-card-id]')).filter(
-    (element) => element.dataset.cardId !== draggingId,
-  )
-
-  for (let i = 0; i < items.length; i += 1) {
-    const box = items[i].getBoundingClientRect()
-    if (clientY < box.top + box.height / 2) return i
-  }
-  return items.length
+  spec: ColumnSpec
+  tasks: Task[]
+  total: number
+  collapsed: boolean
+  onToggleCollapsed: (status: ColumnSpec['status']) => void
+  draggingId: string | null
+  target: DropTarget | null
+  handleProps: (task: Task) => Record<string, unknown>
+  onOpen: (task: Task) => void
+  onToggleDone: (task: Task) => void
+  onNudge: (task: Task, direction: -1 | 1) => void
+  onDelete: (task: Task) => void
+  filtered: boolean
 }
 
 export function Column({
-  status,
-  label,
-  cards,
-  dragging,
-  canMoveLeft,
-  canMoveRight,
+  spec,
+  tasks,
+  total,
+  collapsed,
+  onToggleCollapsed,
+  draggingId,
+  target,
+  handleProps,
   onOpen,
-  onMove,
-  onDrop,
-  onDragStart,
-  onDragEnd,
+  onToggleDone,
+  onNudge,
+  onDelete,
+  filtered,
 }: Props) {
-  const listRef = useRef<HTMLDivElement>(null)
-  const [over, setOver] = useState(false)
+  const over = spec.wip !== null && total > spec.wip
+  const dropping = target?.status === spec.status
+  const others = tasks.filter((task) => task.id !== draggingId).length
 
-  function handleDragOver(event: DragEvent<HTMLDivElement>) {
-    if (!dragging) return
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'move'
-    setOver(true)
-  }
-
-  function handleDrop(event: DragEvent<HTMLDivElement>) {
-    if (!dragging) return
-    event.preventDefault()
-    setOver(false)
-    const list = listRef.current
-    onDrop(status, list ? dropIndex(list, event.clientY, dragging.id) : cards.length)
-  }
+  // The dragged card stays mounted: it holds the pointer capture, and
+  // unmounting it would cut off the very events that finish the drag.
+  let slot = 0
 
   return (
     <section
-      className={`column column-${status}${over ? ' column-over' : ''}`}
-      onDragOver={handleDragOver}
-      onDragLeave={() => setOver(false)}
-      onDrop={handleDrop}
-      aria-label={label}
+      className={`column column-${spec.status}${collapsed ? ' column-collapsed' : ''}${
+        dropping ? ' column-dropping' : ''
+      }`}
+      data-column={spec.status}
+      aria-label={spec.label}
     >
       <header className="column-head">
-        <span className="dot" aria-hidden="true" />
-        <h2>{label}</h2>
-        <span className="count">{cards.length}</span>
+        <button
+          className="collapse"
+          type="button"
+          onClick={() => onToggleCollapsed(spec.status)}
+          aria-expanded={!collapsed}
+          aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${spec.label}`}
+        >
+          {collapsed ? '▸' : '▾'}
+        </button>
+        <h2>{spec.label}</h2>
+        <span className={`count${over ? ' count-over' : ''}`}>
+          {spec.wip === null ? total : `${total} / ${spec.wip}`}
+        </span>
       </header>
 
-      <div className="column-list" ref={listRef}>
-        {cards.map((card) => (
-          <CardItem
-            key={card.id}
-            card={card}
-            isDragging={dragging?.id === card.id}
-            canMoveLeft={canMoveLeft}
-            canMoveRight={canMoveRight}
-            onOpen={onOpen}
-            onMove={onMove}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-          />
-        ))}
-        {cards.length === 0 && <p className="empty">Nothing here.</p>}
-      </div>
+      {over && !collapsed && (
+        <p className="wip-warning" role="status">
+          Over the {spec.wip} you set for this column. Nothing is blocked — worth a look.
+        </p>
+      )}
+
+      {!collapsed && (
+        <div className="column-list">
+          {tasks.map((task, index) => {
+            const moving = task.id === draggingId
+            const at = slot
+            if (!moving) slot += 1
+            return (
+              <div key={task.id} className="slot">
+                {dropping && !moving && target?.index === at && <div className="drop-line" />}
+                <TaskCard
+                  task={task}
+                  isDragging={moving}
+                  handleProps={handleProps(task)}
+                  onOpen={onOpen}
+                  onToggleDone={onToggleDone}
+                  onNudge={onNudge}
+                  onDelete={onDelete}
+                  canMoveUp={!filtered && index > 0}
+                  canMoveDown={!filtered && index < tasks.length - 1}
+                />
+              </div>
+            )
+          })}
+
+          {dropping && (target?.index ?? 0) >= others && <div className="drop-line" />}
+
+          {tasks.length === 0 && (
+            <p className="empty">
+              {filtered ? 'Nothing here matches the filters.' : emptyFor(spec.status)}
+            </p>
+          )}
+        </div>
+      )}
     </section>
   )
+}
+
+function emptyFor(status: ColumnSpec['status']): string {
+  if (status === 'backlog') return 'Nothing parked here.'
+  if (status === 'todo') return 'Nothing queued up.'
+  if (status === 'progress') return 'Nothing on the go.'
+  return 'Nothing finished yet.'
 }

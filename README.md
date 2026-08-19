@@ -4,9 +4,18 @@ A personal kanban board that stays in sync between your phone and your computer.
 
 Named for the stacks of stones that mark a trail — one placed at a time.
 
-Three columns — **To do**, **In progress**, **Done**. Cards have a title and
-optional notes. Drag them between columns on a desktop, or use the `‹` `›`
-buttons, which work just as well on a touchscreen.
+Four columns — **Backlog**, **To Do**, **In Progress**, **Done** — with soft WIP
+limits that warn rather than block.
+
+Tasks carry a title, note, tag, priority, and due date. Quick-capture from the
+bar (or press `N`), or open the full editor. Search across titles and notes,
+filter by tag, or narrow to what is due. A weekly review pulls together where
+things stand, what is overdue, what has gone stale in the Backlog, and offers to
+archive what you finished.
+
+Drag works with a finger as well as a mouse: it is built on Pointer Events, not
+HTML5 drag, which never fires on iOS Safari or Android Chrome. `Alt+↑/↓` and the
+per-card arrows do the same job from the keyboard.
 
 ## How it works
 
@@ -33,8 +42,8 @@ passphrase everywhere.
 
 ### Why the board is one document
 
-The whole board is small — a few hundred cards at most — so it is stored as one
-JSON blob rather than a row per card. That keeps the server to one file.
+The whole board is small — a few hundred tasks at most — so it is stored as one
+JSON blob rather than a row per task. That keeps the server to one file.
 
 To stop one device from overwriting the other, the document carries a revision
 number. Every write sends the revision it was based on, and the server rejects
@@ -101,20 +110,30 @@ Layout of the source:
 
 ```
 api/
-  board.ts             GET and PUT the board, passphrase-gated
+  board.ts             GET and PUT the board, passphrase-gated, plus migration
 src/
   App.tsx              locked or unlocked
   components/
     Passphrase.tsx     the unlock screen
-    Board.tsx          columns, dialog state, drag state
-    Column.tsx         one column, including where a drop lands
-    CardItem.tsx       one card
-    CardDialog.tsx     new/edit card form
+    Board.tsx          header, capture, filters, columns, modals
+    Column.tsx         one column, WIP state, and where a drop lands
+    TaskCard.tsx       one task
+    TaskDialog.tsx     new/edit task form
+    WeeklyReview.tsx   the review modal
+    Toasts.tsx         transient confirmations
   lib/
     api.ts             fetch wrapper, passphrase storage, typed errors
-    types.ts           Card, Board, Status, the column list
+    types.ts           Task, Board, Status, columns, tags, date helpers
     useBoard.ts        load, refresh on focus, and all mutations
+    useDrag.ts         pointer-based drag and drop
 ```
+
+### Schema changes
+
+`api/board.ts` normalizes whatever is in storage on the way out, so an older
+document keeps working and is rewritten in the current shape on its next save.
+The board began as three columns of `cards` with snake_case fields; that shape
+still loads.
 
 ### How ordering works
 
@@ -125,8 +144,11 @@ never has to renumber the column.
 ## Known limitations
 
 - **No offline support.** The app needs a connection.
+- **No undo.** Delete asks for confirmation; nothing else is reversible.
 - **No tests in the repo.** The handler and the browser flow were both exercised
   during development, but nothing is wired up to run on its own.
-- **The columns are fixed.** To do / In progress / Done are defined in
-  `src/lib/types.ts`.
+- **Columns and tags are fixed**, both defined in `src/lib/types.ts`.
+- **Notes are plain text** — links in them are not clickable.
+- **The archive has no viewer.** Archived tasks are kept in the payload and are
+  safe, but there is no screen for browsing or restoring them yet.
 - **One board.** No notion of multiple boards or projects.

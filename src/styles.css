@@ -1,10 +1,11 @@
 /*
  * A warm, paper-like light theme: cream page, soft stone columns, near-white
- * cards, deep navy ink. Each column carries one muted accent.
+ * cards, deep navy ink. Each column and tag carries one muted accent.
  */
 :root {
   --bg: #f6f2e9;
   --surface: #ebe7dc;
+  --surface-2: #e3ded1;
   --card: #fbf9f4;
   --text: #15293d;
   --muted: #6c7b8c;
@@ -13,6 +14,7 @@
   --accent: #1e3a57;
   --accent-text: #fbf9f4;
   --danger: #a8452f;
+  --warn: #b07d1a;
   --shadow: 0 1px 2px rgba(30, 35, 45, 0.05), 0 6px 16px rgba(30, 35, 45, 0.05);
   --shadow-lift: 0 2px 4px rgba(30, 35, 45, 0.07), 0 12px 28px rgba(30, 35, 45, 0.09);
   --radius: 12px;
@@ -33,11 +35,12 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
+/* The shell owns the height so each column can scroll on its own. */
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
 }
 
 /* --- top bar --- */
@@ -45,14 +48,12 @@ body {
 .topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
-  padding-top: max(14px, env(safe-area-inset-top));
+  gap: 14px;
+  padding: 12px 20px;
+  padding-top: max(12px, env(safe-area-inset-top));
   background: var(--bg);
   border-bottom: 1px solid var(--line-soft);
-  position: sticky;
-  top: 0;
-  z-index: 5;
+  flex: none;
 }
 
 .wordmark {
@@ -60,8 +61,13 @@ body {
   font-family: var(--serif);
   font-size: 26px;
   font-weight: 500;
-  letter-spacing: 0.01em;
   line-height: 1.1;
+}
+
+.save-state {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 56px;
 }
 
 .topbar-actions {
@@ -70,17 +76,74 @@ body {
   gap: 8px;
 }
 
+/* --- controls --- */
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line-soft);
+  flex: none;
+}
+
+.capture {
+  display: flex;
+  gap: 8px;
+  flex: 1 1 320px;
+  min-width: 240px;
+}
+
+.capture input {
+  flex: 1;
+  min-width: 0;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search {
+  width: 170px;
+}
+
+.controls input,
+.controls select {
+  font: inherit;
+  /* 16px keeps iOS Safari from zooming when a field takes focus. */
+  font-size: 16px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  min-height: 40px;
+}
+
+.filter-note {
+  margin: 0;
+  padding: 8px 20px 0;
+  font-size: 13px;
+  color: var(--warn);
+  flex: none;
+}
+
 /* --- buttons --- */
 
 .btn {
   font: inherit;
-  padding: 8px 15px;
+  padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: var(--card);
   color: var(--text);
   cursor: pointer;
   min-height: 40px;
+  white-space: nowrap;
   transition: border-color 120ms ease, background 120ms ease;
 }
 
@@ -105,6 +168,18 @@ body {
   border-color: #16293d;
 }
 
+.btn-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.btn-quiet {
+  background: none;
+  border-color: transparent;
+  color: var(--muted);
+}
+
 .btn-danger {
   color: var(--danger);
   border-color: transparent;
@@ -115,81 +190,92 @@ body {
   width: 100%;
 }
 
-/* Quiet chevrons: present for touch, but not competing with the card's text. */
 .icon-btn {
   font: inherit;
-  font-size: 17px;
+  font-size: 13px;
   line-height: 1;
-  width: 26px;
-  height: 26px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
   border-radius: 6px;
   border: 0;
   background: none;
   color: var(--muted);
-  opacity: 0.55;
   cursor: pointer;
-  transition: opacity 120ms ease, background 120ms ease;
+  transition: background 120ms ease, color 120ms ease;
 }
 
 .icon-btn:hover:not(:disabled) {
-  opacity: 1;
   color: var(--text);
-  background: var(--surface);
+  background: var(--surface-2);
 }
 
 .icon-btn:disabled {
-  opacity: 0.16;
+  opacity: 0.25;
   cursor: default;
+}
+
+.icon-btn.danger {
+  color: var(--danger);
+  font-weight: 550;
 }
 
 /* --- board --- */
 
 .board {
   flex: 1;
+  min-height: 0;
   display: flex;
-  gap: 16px;
-  padding: 18px 20px;
-  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  gap: 14px;
+  padding: 14px 20px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
   align-items: stretch;
 }
 
 .column {
-  flex: 0 0 86%;
-  scroll-snap-align: center;
+  flex: 1 1 0;
+  min-width: 250px;
+  max-height: 100%;
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
+  transition: background 120ms ease;
 }
 
-/* Phones get one column at a time; anything wider shows the whole board. */
-@media (min-width: 720px) {
-  .board {
-    scroll-snap-type: none;
-  }
-
-  .column {
-    flex: 1 1 0;
-    min-width: 0;
-  }
+.column-collapsed {
+  flex: 0 0 56px;
+  min-width: 56px;
+  padding: 14px 8px;
 }
 
-.column-over {
+.column-collapsed .column-head {
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.column-collapsed h2 {
+  writing-mode: vertical-rl;
+}
+
+.column-dropping {
   background: #e5e0d2;
 }
 
-/* One muted accent per column, echoed in the dot and the rule beneath it. */
+.column-backlog {
+  --dot: #8a8272;
+}
 .column-todo {
   --dot: #c8871b;
 }
-
-.column-doing {
+.column-progress {
   --dot: #5b7290;
 }
-
 .column-done {
   --dot: #6e8a6a;
 }
@@ -197,18 +283,23 @@ body {
 .column-head {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding-bottom: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  padding-bottom: 9px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--dot);
+  flex: none;
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--dot);
-  flex: none;
+.collapse {
+  font: inherit;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
 }
 
 .column-head h2 {
@@ -218,6 +309,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.09em;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .count {
@@ -226,35 +318,103 @@ body {
   color: var(--muted);
 }
 
+.count-over {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.wip-warning {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--warn);
+  background: #f6efdd;
+  border-radius: 7px;
+  padding: 7px 9px;
+  flex: none;
+}
+
+/* Each column scrolls on its own, so a long Backlog cannot push the rest away. */
 .column-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  /* Fills the column so an empty area is still a comfortable drop target. */
+  gap: 9px;
   flex: 1;
   min-height: 56px;
+  overflow-y: auto;
+}
+
+.slot {
+  position: relative;
+}
+
+.drop-line {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  margin: 3px 0;
 }
 
 /* --- cards --- */
 
 .card {
-  display: flex;
-  align-items: stretch;
-  gap: 6px;
   background: var(--card);
   border-radius: 10px;
   box-shadow: var(--shadow);
-  cursor: grab;
-  transition: box-shadow 130ms ease, transform 130ms ease;
+  transition: box-shadow 130ms ease;
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .card:hover {
   box-shadow: var(--shadow-lift);
 }
 
+.card-high {
+  border-left: 3px solid var(--warn);
+}
+
+.card-overdue {
+  border-left: 3px solid var(--danger);
+}
+
+.card-done .card-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
 .card-dragging {
-  opacity: 0.45;
-  box-shadow: none;
+  opacity: 0.4;
+}
+
+.card-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 11px 11px 4px;
+}
+
+.check {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.check[aria-pressed='true'] {
+  background: #dfe7dc;
+  border-color: #6e8a6a;
+  color: #40603c;
 }
 
 .card-body {
@@ -263,11 +423,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding: 13px 14px;
   font: inherit;
   text-align: left;
   background: none;
   border: 0;
+  padding: 0;
   color: inherit;
   cursor: pointer;
 }
@@ -287,12 +447,78 @@ body {
   overflow-wrap: anywhere;
 }
 
-.card-moves {
+.card-meta {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 1px;
+}
+
+.chip {
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 0 7px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chip-personal { background: #e4e2ef; color: #4b4a6b; }
+.chip-home     { background: #e2ebe2; color: #40603c; }
+.chip-admin    { background: #e6e3d8; color: #6a6350; }
+.chip-health   { background: #efe1e1; color: #7d4a45; }
+.chip-finance  { background: #dfe8ee; color: #3f5f75; }
+.chip-shop     { background: #f2e6d6; color: #855c22; }
+.chip-church   { background: #e9e1ee; color: #5f4a72; }
+.chip-high     { background: #f6ecd6; color: #8a6414; font-weight: 600; }
+.chip-due      { background: var(--surface-2); color: var(--muted); }
+.chip-overdue  { background: #f4e2dd; color: #8f3a27; font-weight: 600; }
+
+/* The grip must not scroll the page while a finger is dragging a card. */
+.grip {
+  flex: none;
+  padding: 2px 4px;
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.app-dragging {
+  user-select: none;
+}
+
+.grip:active {
+  cursor: grabbing;
+  opacity: 1;
+}
+
+.card-tools {
+  display: flex;
+  align-items: center;
   gap: 2px;
-  padding: 8px 7px 8px 0;
+  padding: 0 7px 6px;
+}
+
+.ghost {
+  position: fixed;
+  z-index: 60;
+  transform: translate(-50%, -50%) rotate(-1.5deg);
+  pointer-events: none;
+  background: var(--card);
+  box-shadow: var(--shadow-lift);
+  border-radius: 10px;
+  padding: 9px 13px;
+  max-width: 240px;
+  font-weight: 550;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .empty {
@@ -302,7 +528,7 @@ body {
   opacity: 0.75;
 }
 
-/* --- panels, dialog, forms --- */
+/* --- panels, dialogs, forms --- */
 
 .centered {
   min-height: 100vh;
@@ -323,9 +549,9 @@ body {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 26px;
+  padding: 24px;
   width: 100%;
-  max-width: 420px;
+  max-width: 430px;
 }
 
 .panel-title {
@@ -333,7 +559,6 @@ body {
   font-family: var(--serif);
   font-size: 30px;
   font-weight: 500;
-  letter-spacing: 0.01em;
 }
 
 .tagline {
@@ -345,7 +570,7 @@ body {
 }
 
 .dialog-title {
-  margin: 0 0 18px;
+  margin: 0 0 16px;
   font-family: var(--serif);
   font-size: 23px;
   font-weight: 500;
@@ -358,7 +583,7 @@ body {
   display: grid;
   place-items: center;
   padding: 16px;
-  z-index: 20;
+  z-index: 40;
 }
 
 .dialog {
@@ -366,9 +591,20 @@ body {
   overflow-y: auto;
 }
 
+.review {
+  max-width: 520px;
+}
+
 .field {
   display: block;
-  margin-bottom: 14px;
+  margin-bottom: 13px;
+  flex: 1;
+  min-width: 0;
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
 }
 
 .field > span {
@@ -377,7 +613,7 @@ body {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .field input,
@@ -385,9 +621,8 @@ body {
 .field select {
   width: 100%;
   font: inherit;
-  /* 16px keeps iOS Safari from zooming when a field takes focus. */
   font-size: 16px;
-  padding: 10px 12px;
+  padding: 9px 11px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: var(--bg);
@@ -400,7 +635,9 @@ body {
 
 .field input:focus,
 .field textarea:focus,
-.field select:focus {
+.field select:focus,
+.controls input:focus,
+.controls select:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
@@ -409,10 +646,119 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 20px;
+  margin-top: 18px;
+  flex-wrap: wrap;
 }
 
 .spacer {
+  flex: 1;
+}
+
+/* --- weekly review --- */
+
+.review-block {
+  margin-top: 18px;
+}
+
+.review-block h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.wip-list,
+.review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wip-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+}
+
+.wip-label {
+  flex: 1;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.dot-backlog { background: #8a8272; }
+.dot-todo { background: #c8871b; }
+.dot-progress { background: #5b7290; }
+.dot-done { background: #6e8a6a; }
+
+.review-list button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  font: inherit;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.review-list button:hover {
+  border-color: var(--muted);
+}
+
+/* --- toasts, banners --- */
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--accent);
+  color: var(--accent-text);
+  padding: 9px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  box-shadow: var(--shadow-lift);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 20px 0;
+  padding: 10px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--danger);
+  background: #f6e7e2;
+  font-size: 14px;
+  flex: none;
+}
+
+.banner span {
   flex: 1;
 }
 
@@ -425,25 +771,87 @@ body {
   font-size: 14px;
 }
 
-.banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 14px 20px 0;
-  padding: 10px 13px;
-  border-radius: 8px;
-  border: 1px solid var(--danger);
-  background: #f6e7e2;
-  font-size: 14px;
-}
-
-.banner span {
-  flex: 1;
-}
-
 code {
   background: var(--surface);
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 13px;
+}
+
+/* --- responsive --- */
+
+@media (max-width: 1040px) {
+  .column {
+    min-width: 230px;
+  }
+
+  .search {
+    width: 140px;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar,
+  .controls,
+  .board {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .wordmark {
+    font-size: 22px;
+  }
+
+  .save-state {
+    min-width: 0;
+  }
+
+  /* One column at a time, snapped, rather than four squeezed together. */
+  .board {
+    scroll-snap-type: x mandatory;
+  }
+
+  .column {
+    flex: 0 0 86%;
+    scroll-snap-align: center;
+  }
+
+  .column-collapsed {
+    flex: 0 0 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-actions .btn {
+    padding: 8px 10px;
+  }
+
+  .capture {
+    flex: 1 1 100%;
+  }
+
+  .filters {
+    width: 100%;
+  }
+
+  .search {
+    flex: 1;
+    width: auto;
+  }
+
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .board {
+    scroll-behavior: auto;
+  }
 }
